@@ -6,7 +6,7 @@ use ieee.std_logic_textio.all;
 use std.textio.all;
 
 entity cellular_automata_1d_tb is
-  generic ( G_LEN : integer := 128);
+  generic (G_LEN : integer := 128);
 end cellular_automata_1d_tb;
 
 architecture behavioral of cellular_automata_1d_tb is
@@ -20,13 +20,11 @@ architecture behavioral of cellular_automata_1d_tb is
   signal valid_data_out            : std_logic;
   signal rule                      : integer;
   signal rule_vec                  : std_logic_vector(7 downto 0);
-  signal number_of_generations_vec : std_logic_vector(31 downto 0);
   signal number_of_generations     : integer;
+  signal number_of_generations_vec : std_logic_vector(31 downto 0);
 
-  --constant output_file_name : string := "output.txt";
-  --file output_file : text is out output_file_name;
   file output_file : text;
-  
+
 begin
 
   DUT : entity work.cellular_automata_1d
@@ -65,7 +63,7 @@ begin
   end process;
 
   process
-    variable buf : line;
+    variable buf              : line;
     variable output_file_name : string(1 to 100);
   begin
     rst   <= '1';
@@ -78,21 +76,27 @@ begin
     data_in <= X"00000000" & X"80000000" & X"00000008" & X"00000000";
 
     number_of_generations <= 1000;
+
+    -- rule 0 to 255
     for i in 0 to 255 loop
       wait until rising_edge(clk);
-      
+
+      -- open output_<rule>.txt
       output_file_name := string'("output_" & integer'image(i) & ".txt");
       file_open(output_file, output_file_name, write_mode);
 
-      -- write data_in to log
+      -- write data_in to the log
       write(buf, data_in);
       writeline(output_file, buf);
 
-      rule                  <= i;
-      start                 <= '1';
+      rule <= i;
+
+      -- Start calculation
+      start <= '1';
       wait until rising_edge(clk);
-      start                 <= '0';
-    
+      start <= '0';
+
+      -- Waiting for completion
       while true loop
         wait until rising_edge(clk);
         if(busy = '0') then
@@ -102,9 +106,10 @@ begin
         end if;
         wait until rising_edge(clk);
       end loop;
+
     end loop;
- 
-    wait;
+
+    wait;                               -- end
 
   end process;
 
